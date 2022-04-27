@@ -6,10 +6,13 @@ set -eu -o pipefail
 
 #set -x
 #trap read debug
-
+flag=""
 #################################################################################
 #
-#Run example: ./smsc_restart.bash t -f
+#Run example: ./smsc_restart.bash -c c
+#Run example: ./smsc_restart.bash -c f
+#Run example: ./smsc_restart.bash -t c
+#Run example: ./smsc_restart.bash -t f
 #File:        ./smsc_restart.bash
 #Date:        2022APR26
 #Author:      Fabrizio Regalli with input from William Blair
@@ -43,19 +46,23 @@ function Help()
     # Display Help
     echo "SMSC Restart Script"
     echo
-    echo "usage: $0 <env> [-f]" 
-    echo "  env: C for CER or T for TER"
-	echo "       -f (force): restart without any check"
+    echo "usage: $0 -c c"
+    echo "usage: $0 -c f"
+    echo "usage: $0 -t c"
+    echo "usage: $0 -t f"
+    echo "  env: c for CER or t for TER"
+	echo "       argument c (check): check and restart if x errors in log"
+	echo "       argument f (force): restart without any check"
 	echo
 }
 #################################################################################
 
 function cer_service_restart() 
 {
-    echo "Found timeout, fail or wrong number of tcapsrv processes or -f" \
-    "option has been specified. Stopping $cer_smsc_server1."
+    echo "Found timeout, fail or wrong number of tcapsrv processes or f' \
+    'option has been specified. Stopping $cer_smsc_server1."
 
-    echo cd /etc/sv/smsc/; echo sv stop smsc
+    echo "cd /etc/sv/smsc/; echo sv stop smsc"
          cd /etc/sv/smsc/; sudo sv stop smsc
     echo "Connecting to $cer_acu_server1 and killing tcapsrv"
     
@@ -63,60 +70,69 @@ function cer_service_restart()
     ssh root@"$cer_smsc_server2" -p 2200 "killall -9 tcapsrv"
     
         echo "Start smsc services.."
-        echo cd /etc/sv/smsc/; echo sv start smsc
-             cd /etc/sv/smsc/; sudo sv start smsc
+        echo "cd /etc/sv/smsc/"; echo "sv start smsc"
+              cd /etc/sv/smsc/;  sudo sv start smsc
         echo "Restart completed on $cer_smsc_server1"
 }
 #################################################################################
 
 function cer_error_check() 
 {
+    echo "Executing restart of CER smsc...";
+    
+    PC=$(ssh root@"$cer_smsc_server2" -p 2200 ps ax | grep tcapsrv | grep -v grep -c);
+        
+    if [[ $(sudo tail -50 /etc/sv/smsc/log/main/current | \
+    grep -P "fail | \[error\] CRASH REPORT Process") == "" ]] && \
+    [[ $PC -eq 2 ]]; then 
+        {
+            echo "No fail or timeout found on $cer_smsc_server1. Processes on aculab are" \
+            "two. Not restarted. Exiting"
+            exit 1
+        }
+    else cer_service_restart;
+    fi
+}
+#################################################################################
+
+function launchpad()
+{
     cer_smsc_server1=$1
     cer_smsc_server2=$2
     cer_acu_server1=$3
-
-    echo "Executing restart of CER smsc..."
     
-    ssh "$cer_smsc_server1"
+    if [[ "$flag" == 'f' ]]; then
+    {
+        ssh "$cer_smsc_server1" "\$(typeset -f); cer_service_restart"
+    }
+    fi
     
-    PC=$(ssh root@"$cer_smsc_server2" -p 2200 ps ax | grep tcapsrv | grep -v grep |wc -l)
-    ####################################
-    #
-    #for testing purposes
-    PC=2
-    ####################################
-    
-    if ([[ $(sudo tail -50 /etc/sv/smsc/log/main/current | \
-    grep -P "fail | \[error\] CRASH REPORT Process") == "" ]] && \
-    [[ $PC -eq 2 ]]); then
-    
-        echo "No fail or timeout found on $cer_smsc_server1. Processes on aculab are" \
-        "two. Not restarted. Exiting"
-        exit 1
-    
-    else
-        cer_service_restart
+    if [[ "$flag" == 'f' ]]; then
+    {
+        ssh "$cer_smsc_server1" "\$(typeset -f); cer_error_check"
+    }
     fi
 }
 #################################################################################
 
 function main() 
 {
-    while getopts ":c:t:f:h" option;
+    while getopts ":c:t:h" option;
       do
           case "$option" in
-              c)  cer_error_check cer-smsc-05 cer-smsc-01 cer-aculab-01
-                  cer_error_check cer-smsc-06 cer-smsc-02 cer-aculab-02 ;;
+              
+              c)  flag="$OPTARG"
+                  launchpad cer-smsc-05 cer-smsc-01 cer-aculab-01
+                  launchpad cer-smsc-06 cer-smsc-02 cer-aculab-02 ;;
                   
-              t)  cer_error_check ter-smsc-03 ter-smsc-01 ter-aculab-01
-                  cer_error_check ter-smsc-04 ter-smsc-02 ter-aculab-02 ;;
-                  
-              f)  echo 'Forcing services to restart ';;
-                  
-              h)  Help  ;;
+              t)  flag="$OPTARG"  
+                  launchpad ter-smsc-03 ter-smsc-01 ter-aculab-01
+                  launchpad ter-smsc-04 ter-smsc-02 ter-aculab-02 ;;
 
-              *)  echo "No valid answer, exiting.."
-                  exit 2
+              h)  Help ;;
+
+              #*)  echo "No valid answer, exiting.."
+              #    exit 2
          esac
     done
 }
