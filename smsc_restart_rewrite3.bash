@@ -1,9 +1,7 @@
 #!/bin/env bash
-
 set -o errexit
 set -o nounset
 set -eu -o pipefail
-
 #set -x
 #trap read debug
 #################################################################################
@@ -62,7 +60,6 @@ function Help()
 function cer_service_restart() 
 {
     echo "Found timeout, fail or wrong number of tcapsrv processes or f option has been specified. Stopping $cer_smsc_server1."
-    echo "service restart $ssh_pwd"
     echo "cd /etc/sv/smsc/; echo sv stop smsc"
          cd /etc/sv/smsc/; echo "$ssh_pwd" | sudo -S sv stop smsc
     echo "Connecting to $cer_acu_server1 and killing tcapsrv"
@@ -70,7 +67,6 @@ function cer_service_restart()
     # Connect directly aculab machine on port 2200
     #ssh root@"$cer_smsc_server2" -p 2200 "killall -9 tcapsrv"
     sshpass -p $ssh_pwd ssh -tt -o "StrictHostKeyChecking no" ubuntu@"$cer_smsc_server2" -p 22 "killall -9 tcapsrv"
-    
         echo "Start smsc services.."
         echo "cd /etc/sv/smsc/"; echo "sv start smsc"
               cd /etc/sv/smsc/;  echo "$ssh_pwd" | sudo -S sv start smsc
@@ -81,12 +77,10 @@ function cer_service_restart()
 function cer_error_check() 
 {
     echo "Executing restart of CER smsc...";
-    #PC=3
-    
-    ####PC=$(ssh root@"$cer_smsc_server2" -p 2200 ps ax | grep tcapsrv | grep -v grep -c);
+####PC=$(ssh root@"$cer_smsc_server2" -p 2200 ps ax | grep tcapsrv | grep -v grep -c);
     PC=$(sshpass -p $ssh_pwd ssh -tt -o "StrictHostKeyChecking no" ubuntu@"$cer_smsc_server2" -p 22 ps ax | grep kworker | grep -v grep -c)
-    echo "PC value is $PC"
     PC=2
+
     sshpass -p $ssh_pwd ssh -tt -o "StrictHostKeyChecking no" ubuntu@"$cer_smsc_server2" -p 22 << EOT
         readonly ssh_pwd=\\$ssh_pwd
         touch $HOME/.hushlogin
@@ -108,9 +102,7 @@ function cer_error_check()
             }
         fi
 EOT
-
     exit
-    
 }
 #################################################################################
 
@@ -119,9 +111,8 @@ function launchpad()
     cer_smsc_server1=$1
     cer_smsc_server2=$2
     cer_acu_server1=$3
-    readonly ssh_pwd='!12345abcd'
+    readonly ssh_pwd='!1qqaazz'
     echo "$ssh_pwd"
-    echo "$random_string"
     
     if [[ "$flag" == 'f' ]]; then
     {
@@ -137,7 +128,6 @@ function launchpad()
         #sshpass -p $ssh_pwd ssh -tt -q ubuntu@"$cer_smsc_server1" << EOT
         sshpass -p $ssh_pwd ssh -tt -q ubuntu@"$cer_smsc_server1" << EOT
             readonly ssh_pwd=\\$ssh_pwd
-            readonly random_string=\\$random_string
             echo "$ssh_pwd"
             cer_smsc_server1=$cer_smsc_server1
             cer_smsc_server2=$cer_smsc_server2
@@ -167,7 +157,7 @@ function main()
                   launchpad ter-smsc-04 ter-smsc-02 ter-aculab-02 ;;
 
               x)  flag="$OPTARG"  
-                  launchpad 192.168.1.2 192.168.1.3 192.168.1.4 ;;                  
+                  launchpad 192.168.1.4 192.168.1.83 192.168.1.191 ;;                  
 
               h)  Help ;;
 
