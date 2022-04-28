@@ -111,7 +111,7 @@ function launchpad()
     cer_smsc_server1=$1
     cer_smsc_server2=$2
     cer_acu_server1=$3
-    readonly ssh_pwd='!1qqaazz'
+    readonly ssh_pwd='!1abcde'
     echo "$ssh_pwd"
     
     if [[ "$flag" == 'f' ]]; then
@@ -122,20 +122,16 @@ function launchpad()
     
     if [[ "$flag" == 'c' ]]; then
     {
-        #< "cer_smsc_server1=$cer_smsc_server1; cer_smsc_server2=$cer_smsc_server2; cer_acu_server1=$cer_acu_server1;"
-        #-T -o SendEnv=$cer_smsc_server1 -o $cer_smsc_server2 -o $cer_acu_server1
-        #ssh "$cer_smsc_server1" "$(typeset -f cer_error_check); cer_error_check"
-        #sshpass -p $ssh_pwd ssh -tt -q ubuntu@"$cer_smsc_server1" << EOT
         sshpass -p $ssh_pwd ssh -tt -q ubuntu@"$cer_smsc_server1" << EOT
-            readonly ssh_pwd=\\$ssh_pwd
-            echo "$ssh_pwd"
-            cer_smsc_server1=$cer_smsc_server1
-            cer_smsc_server2=$cer_smsc_server2
-            cer_acu_server1=$cer_acu_server1
-            touch $HOME/.hushlogin
-            $(typeset -f cer_service_restart)
-            $(typeset -f cer_error_check)
-            cer_error_check
+        readonly ssh_pwd=\\$ssh_pwd
+        echo "$ssh_pwd"
+        cer_smsc_server1=$cer_smsc_server1
+        cer_smsc_server2=$cer_smsc_server2
+        cer_acu_server1=$cer_acu_server1
+        touch $HOME/.hushlogin
+        $(typeset -f cer_service_restart)
+        $(typeset -f cer_error_check)
+        cer_error_check
 EOT
     }
     fi
@@ -157,7 +153,7 @@ function main()
                   launchpad ter-smsc-04 ter-smsc-02 ter-aculab-02 ;;
 
               x)  flag="$OPTARG"  
-                  launchpad 192.168.1.4 192.168.1.83 192.168.1.191 ;;                  
+                  launchpad 192.168.1.2 192.168.1.3 192.168.1.4 ;;                  
 
               h)  Help ;;
 
