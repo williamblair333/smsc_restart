@@ -167,7 +167,7 @@ function main()
                   launchpad ter-smsc-04 ter-smsc-02 ter-aculab-02 ;;
 
               x)  flag="$OPTARG"  
-                  launchpad 192.168.1.4 192.168.1.83 192.168.1.191 ;;                  
+                  launchpad 192.168.1.2 192.168.1.3 192.168.1.4 ;;                  
 
               h)  Help ;;
 
