@@ -119,9 +119,7 @@ function launchpad()
     cer_smsc_server1=$1
     cer_smsc_server2=$2
     cer_acu_server1=$3
-    #readonly ssh_pwd='!1qqaazz'
-    readonly ssh_pwd='!1qqaazz'
-    readonly random_string='!1qqaazz'
+    readonly ssh_pwd='!12345abcd'
     echo "$ssh_pwd"
     echo "$random_string"
     
