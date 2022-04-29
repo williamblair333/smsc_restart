@@ -32,10 +32,12 @@ set -eu -o pipefail
 # Additional info: 
 #https://kaleyra.atlassian.net/wiki/spaces/INFOPS/pages/1242333229/SMSC+ACULAB#SMSC-TCAP-ERRORS%3A
 #
-# In order to work, from your user <name.surname> generate the ssh key on the following servers:
+# In order to work, from your user <name.surname> generate the ssh key on the 
+# following servers:
 # cer-smsc-05, cer-smsc-06, ter-smsc-03, and ter-smsc-04 with the command
 # ssh-keygen -t rsa
-# and copy it (id_rsa.pub) into root@{ter,cer}-aculab-0{1,2} inside root/.ssh/authorized_keys
+# and copy it (id_rsa.pub) into root@{ter,cer}-aculab-0{1,2} inside 
+# root/.ssh/authorized_keys
 #################################################################################
 clear
 touch "$HOME"/.hushlogin
@@ -59,13 +61,15 @@ function Help()
 
 function cer_service_restart() 
 {
-    echo "Found timeout, fail or wrong number of tcapsrv processes or f option has been specified. Stopping $cer_smsc_server1."
+    echo "Found timeout, fail or wrong number of tcapsrv processes or f option \
+    has been specified. Stopping $cer_smsc_server1."
     echo "cd /etc/sv/smsc/; echo sv stop smsc"
          cd /etc/sv/smsc/; echo "$ssh_pwd" | sudo -S sv stop smsc
     echo "Connecting to $cer_acu_server1 and killing tcapsrv"
     
     # Connect directly aculab machine on port 2200
-    sshpass -p "$ssh_pwd" ssh -tt -o "StrictHostKeyChecking no" root@"$cer_smsc_server2" -p 2200 "killall -9 tcapsrv"
+    sshpass -p "$ssh_pwd" ssh -tt -o "StrictHostKeyChecking no" \
+    root@"$cer_smsc_server2" -p 2200 "killall -9 tcapsrv"
         echo "Start smsc services.."
         echo "cd /etc/sv/smsc/"; echo "sv start smsc"
               cd /etc/sv/smsc/;  echo "$ssh_pwd" | sudo -S sv start smsc
@@ -76,16 +80,18 @@ function cer_service_restart()
 function cer_error_check() 
 {
     echo "Executing restart of CER smsc...";
-    PC=$(sshpass -p "$ssh_pwd" ssh -tt -o "StrictHostKeyChecking no" root@"$cer_smsc_server2" -p 2200 ps ax | grep kworker | grep -v grep -c)
+    PC=$(sshpass -p "$ssh_pwd" ssh -tt -o "StrictHostKeyChecking no" \
+    root@"$cer_smsc_server2" -p 2200 ps ax | grep kworker | grep -v grep -c)
     
-    sshpass -p "$ssh_pwd" ssh -tt -o "StrictHostKeyChecking no" root@"$cer_smsc_server2" -p 2200 << EOT
+    sshpass -p "$ssh_pwd" ssh -tt -o "StrictHostKeyChecking no" \
+    root@"$cer_smsc_server2" -p 2200 << EOT
         readonly ssh_pwd=\\$ssh_pwd
         touch $HOME/.hushlogin
-        #if [[ $(tail -50 /etc/sv/smsc/log/main/current | grep -P "fail | \[error\] CRASH REPORT Process") == "" ]] && [[ $PC -eq 2 ]]; then
-        if ([[ $(tail -50 /etc/sv/smsc/log/main/current | grep -c "CRASH REPORT Process") -lt 1 ]] && [[ $PC -eq 2 ]]); then 
-        
+        if ([[ $(tail -50 /etc/sv/smsc/log/main/current | \
+        grep -c "CRASH REPORT Process") -lt 1 ]] && [[ $PC -eq 2 ]]); then 
             {
-                echo "No fail or timeout found on $cer_smsc_server1. Processes on aculab are two. Not restarted. Exiting"
+                echo "No fail or timeout found on $cer_smsc_server1. \
+                Processes on aculab are two. Not restarted. Exiting"
                 exit 1
             }
         else
